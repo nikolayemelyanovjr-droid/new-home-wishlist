@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#485341">
+  <meta name="description" content="Обживаемся — наш семейный вишлист к переезду. Выберите вещь для нового дома и забронируйте её.">
+  <title>Обживаемся. — Вишлист к переезду</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#wishlist">К вишлисту</a>
+  <div id="mode-banner" class="mode-banner" hidden></div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#" class="brand" aria-label="Обживаемся — на главную"><img src="./assets/favicon.svg" width="34" height="34" alt=""><span>обживаемся<span class="brand-dot">.</span></span></a>
+      <nav class="top-nav" aria-label="Основная навигация"><a href="#wishlist" class="active">Вишлист</a><button type="button" data-action="house">Наша квартира <span aria-hidden="true">↗</span></button></nav>
+      <div class="header-actions"><button type="button" class="button button-outline my-button" data-action="mine"><span id="my-icon"></span><span>Мои брони</span><span id="my-count" class="count-badge">0</span></button><button type="button" class="profile-button" id="profile-button" data-action="profile" aria-label="Войти в свой список"></button></div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy"><div class="eyebrow"><span class="tiny-square"></span> НАШЕ НОВОСЕЛЬЕ</div><h1 id="hero-title">Понемногу<br>становится <em>домом.</em></h1><p>Новая квартира — много маленьких начал.<br class="desktop-break"> Здесь вещи, которые помогут нам её обжить.</p><div class="hero-actions"><a class="button button-primary" href="#wishlist">Выбрать подарок <span aria-hidden="true">↓</span></a><button type="button" class="text-button" data-action="help">Как это работает <span class="help-circle">?</span></button></div></div>
+      <button type="button" class="hero-map" data-action="house" aria-label="Посмотреть наш дом, план квартиры и визуализации"><img class="courtyard-map" src="./assets/courtyard.svg" width="600" height="400" alt="Упрощённая схема дома с извилистым западным корпусом и зелёным двором"><div class="map-caption"><span><span class="live-dot"></span> Скоро будем дома</span><span class="map-arrow" aria-hidden="true">↗</span></div><img class="mini-plan" src="./assets/apartment-preview.webp" width="720" height="614" alt="План нашей квартиры"></button>
+    </section>
+
+    <section class="welcome-note" aria-labelledby="welcome-title">
+      <h2 id="welcome-title">Здравствуйте!</h2>
+      <div class="welcome-copy">
+        <p>Здесь мы собрали вещи, которые нам хотелось бы со временем увидеть в своей квартире. Конечно, мы не рассчитываем приобрести всё к переезду: этот список останется актуальным ещё несколько лет — к нашим именинам, дням рождения и другим праздникам. Для нас самих он тоже служит напоминанием: часть вещей мы планируем купить самостоятельно.</p>
+        <p>Пожалуйста, не воспринимайте этот список как обязательный перечень подарков к нашим праздникам. Он может подсказать идею, если вы не знаете, что нам подарить.</p>
+        <p class="welcome-signoff">Спасибо!<br>Надеемся скоро увидеть вас на нашем новоселье!</p>
+      </div>
+    </section>
+
+    <section id="overview" class="overview" aria-label="Прогресс новоселья"></section>
+    <div class="wishlist-intro"><p><span class="little-heart" aria-hidden="true">♡</span> Выберите вещь и забронируйте её — другие гости увидят, что подарок уже выбран.</p><button type="button" class="text-button" data-action="share">Поделиться <span aria-hidden="true">↗</span></button></div>
+
+    <section class="wishlist-layout" id="wishlist" aria-labelledby="wishlist-title">
+      <aside class="room-sidebar"><div class="aside-heading">КОМНАТЫ <span id="rooms-selected"></span></div><nav id="room-nav" aria-label="Фильтр по комнатам"></nav><button class="room-plan-button" type="button" data-action="house"><img src="./assets/apartment-preview.webp" alt="" width="720" height="614" loading="lazy"><span>Каждой вещи — своё место <span aria-hidden="true">↗</span></span></button></aside>
+      <div class="wishlist-main">
+        <div class="list-heading"><div><div class="eyebrow section-eyebrow">ДЛЯ НАШЕГО ДОМА</div><h2 id="wishlist-title">Вишлист <span id="visible-count"></span></h2></div><div id="connection-state" class="connection-state" role="status"></div></div>
+        <div class="filters"><label class="search-field"><span id="search-icon"></span><input id="search" type="search" placeholder="Найти что-нибудь для дома" aria-label="Поиск по вишлисту" autocomplete="off"></label><label class="select-wrap"><span class="sr-only">Статус позиции</span><select id="status-filter"><option value="all">Все позиции</option><option value="available">Свободные</option><option value="reserved">Забронированные</option><option value="mine">Мои брони</option></select></label><label class="select-wrap sort-wrap"><span class="sr-only">Порядок позиций</span><select id="sort"><option value="order">По порядку</option><option value="price-asc">Сначала дешевле</option><option value="price-desc">Сначала дороже</option><option value="title">По алфавиту</option></select></label></div>
+        <div id="admin-toolbar" class="admin-toolbar" hidden><div><strong id="admin-label">Режим хозяев</strong><span>Изменения видны всем гостям</span></div><div><button type="button" class="button button-small button-outline" data-action="export">Экспорт</button><button type="button" class="button button-small button-primary" data-action="add">+ Добавить</button></div></div>
+        <div id="load-error" class="load-error" role="alert" hidden></div>
+        <div id="items-root"><div class="loading-state"><span class="spinner"></span> Расставляем всё по местам…</div></div>
+      </div>
+    </section>
+
+    <section class="home-story"><div><span class="eyebrow">А ВОТ КАК МЫ ЭТО ПРЕДСТАВЛЯЕМ</span><h2>Уже немного<br>чувствуем себя дома.</h2><button type="button" class="text-button" data-action="house">Заглянуть в будущую квартиру <span aria-hidden="true">↗</span></button></div><button type="button" class="story-image" data-action="house" aria-label="Открыть визуализацию гостиной"><img src="./assets/living.webp" width="1672" height="941" alt="Визуализация гостиной: светлый диван, деревянный книжный шкаф, бра и стол" loading="lazy"><span>Будущая гостиная</span></button><button type="button" class="story-image story-kitchen" data-action="house" aria-label="Открыть визуализацию кухни"><img src="./assets/kitchen.webp" width="1672" height="941" alt="Визуализация оливковой кухни с дубовой скамьёй" loading="lazy"><span>Будущая кухня</span></button></section>
+  </main>
+  <footer class="site-footer"><div class="page-shell footer-inner"><a href="#" class="brand footer-brand"><img src="./assets/favicon.svg" width="25" height="25" alt=""><span>обживаемся.</span></a><span>Спасибо, что помогаете сделать квартиру домом.</span><button type="button" class="text-button" id="owner-button" data-action="owner">Для хозяев <span aria-hidden="true">↗</span></button></div></footer>
+
+  <dialog id="mine-dialog" class="side-dialog" aria-labelledby="mine-title"><div class="dialog-top"><div><span class="eyebrow">ВАШ СПИСОК</span><h2 id="mine-title" tabindex="-1">Мои брони</h2></div><button type="button" class="icon-button" data-action="close" aria-label="Закрыть список броней"><span class="close-icon"></span></button></div><div id="mine-content"></div></dialog>
+
+  <dialog id="profile-dialog" class="modal" aria-labelledby="profile-title"><div class="dialog-top"><div><span class="eyebrow">ЛИЧНЫЙ СПИСОК</span><h2 id="profile-title">Будем знакомы</h2></div><button type="button" class="icon-button" data-action="close" aria-label="Закрыть окно входа"><span class="close-icon"></span></button></div><div id="profile-content"></div></dialog>
+
+  <dialog id="help-dialog" class="modal help-dialog" aria-labelledby="help-title"><div class="dialog-top"><h2 id="help-title">Подарить — просто</h2><button type="button" class="icon-button" data-action="close" aria-label="Закрыть инструкцию"><span class="close-icon"></span></button></div><ol class="help-steps"><li><span>01</span><div><h3>Выберите что-нибудь для дома</h3><p>Вещи разложены по комнатам. Можно выбрать сразу несколько комнат или найти подарок через поиск.</p></div></li><li><span>02</span><div><h3>Забронируйте подарок</h3><p>Войдите по ссылке из письма. После бронирования другие гости увидят, что вещь уже выбрана. Имя и почта дарителя гостям не показываются.</p></div></li><li><span>03</span><div><h3>Загляните в «Мои брони»</h3><p>Там все ваши подарки, ссылки в магазины и известная сумма. Бронь можно отменить — позиция снова станет свободной.</p></div></li></ol><div class="quiet-note">Бронь означает, что вы планируете подарить вещь. Покупка оформляется отдельно в магазине. Цена может измениться; товары без цены не входят в сумму. Позиции с несколькими штуками бронируются целым комплектом.</div></dialog>
+
+  <dialog id="house-dialog" class="house-dialog" aria-labelledby="house-title">
+    <header class="house-header">
+      <div class="dialog-top"><div><span class="eyebrow">НАША НОВАЯ КВАРТИРА</span><h2 id="house-title">Загляни в будущую квартиру.</h2></div><button type="button" class="icon-button" data-action="close" aria-label="Закрыть квартиру"><span class="close-icon"></span></button></div>
+      <nav class="house-nav" aria-label="Разделы квартиры">
+        <button type="button" data-action="house-section" data-section="house-plan">План квартиры</button>
+        <button type="button" data-action="house-section" data-section="house-living">Гостиная</button>
+        <button type="button" data-action="house-section" data-section="house-kitchen">Кухня</button>
+        <button type="button" data-action="house-section" data-section="house-wardrobe">Гардеробная</button>
+        <button type="button" data-action="house-section" data-section="house-bath">Санузлы</button>
+      </nav>
+    </header>
+    <div class="house-content">
+      <section class="house-stage" id="house-plan" aria-labelledby="plan-heading">
+        <div class="house-section-heading"><div><span class="eyebrow">01 · ПЛАНИРОВКА</span><h3 id="plan-heading">Каждой вещи — своё место.</h3></div><span class="gallery-note">Нажмите на изображение, чтобы увеличить</span></div>
+        <figure class="gallery-card plan-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="План нашей квартиры" aria-label="Увеличить реальный план квартиры"><img src="./assets/apartment-plan.webp" alt="Реальный план квартиры: стены, окна, дверные проёмы, мебель и размеры по исходному чертежу" width="2637" height="2248"><span class="view-hint" aria-hidden="true">Рассмотреть план <span>↗</span></span></button><figcaption>План квартиры и встроенная мебель</figcaption></figure>
+      </section>
+
+      <section class="house-stage" id="house-living" aria-labelledby="living-heading">
+        <div class="house-section-heading"><div><span class="eyebrow">02 · ГОСТИНАЯ</span><h3 id="living-heading">Собираться всем вместе.</h3></div></div>
+        <div class="gallery-grid">
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гостиная · общий вид" aria-label="Увеличить общий вид гостиной"><img src="./assets/living.webp" alt="Гостиная со светлым диваном, книжным шкафом до потолка, полкой с проектором и обеденным столом" width="1672" height="941" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Общий вид · светлый диван и тёплое дерево</figcaption></figure>
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гостиная · объёмная планировка" aria-label="Увеличить объёмную планировку гостиной"><img src="./assets/living-3d.webp" alt="Объёмный план гостиной сверху: диван, книжный шкаф, стол со стульями, пианино и дверные проёмы" width="1656" height="1146" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Вид сверху · расстановка мебели</figcaption></figure>
+        </div>
+        <details class="house-details"><summary>Книжный шкаф — чертежи и размеры <span aria-hidden="true">+</span></summary><div class="gallery-grid">
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гостиная · эскизы книжного шкафа" aria-label="Увеличить эскизы книжного шкафа"><img src="./assets/living-sketch.webp" alt="Два исходных ракурса книжного шкафа у дивана с окном, карнизом и радиатором" width="1965" height="615" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Книжный шкаф · ракурсы</figcaption></figure>
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гостиная · развёртки книжного шкафа" aria-label="Увеличить развёртки книжного шкафа"><img src="./assets/living-cabinet.webp" alt="Два варианта развёртки книжного шкафа с высотами полок, нижними фасадами, окном и радиатором" width="1780" height="555" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Развёртки · полки и нижние фасады</figcaption></figure>
+        </div></details>
+      </section>
+
+      <section class="house-stage" id="house-kitchen" aria-labelledby="kitchen-heading">
+        <div class="house-section-heading"><div><span class="eyebrow">03 · КУХНЯ</span><h3 id="kitchen-heading">Утро начинается здесь.</h3></div></div>
+        <figure class="gallery-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Кухня · общий вид" aria-label="Увеличить визуализацию кухни"><img src="./assets/kitchen.webp" alt="Оливковые и светлые кухонные фасады, дубовая столешница, мойка и обеденная зона у окна" width="1672" height="941" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Оливковые фасады и обеденная зона у окна</figcaption></figure>
+        <details class="house-details"><summary>Кухня — ракурсы, план и развёртки <span aria-hidden="true">+</span></summary><div class="gallery-grid">
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Кухня · три ракурса мебели" aria-label="Увеличить три ракурса кухни"><img src="./assets/kitchen-sketch.webp" alt="Три исходных эскиза кухни: высокий шкаф и плита, скамья у окна, мойка и верхние шкафы" width="1960" height="646" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Три ракурса · все стороны кухни</figcaption></figure>
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Кухня · план с размерами" aria-label="Увеличить план кухни с размерами"><img src="./assets/kitchen-plan.webp" alt="Исходный план кухни с размерами, дверями, окнами, расстановкой техники и освещением" width="2368" height="1740" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>План · проёмы, мебель и размеры</figcaption></figure>
+          <figure class="gallery-card gallery-wide"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Кухня · фасады и наполнение шкафов" aria-label="Увеличить развёртки кухонных шкафов"><img src="./assets/kitchen-elevations.webp" alt="Полные развёртки четырёх сторон кухни: фасады, внутреннее наполнение шкафов, техника и размеры" width="2864" height="1612" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Развёртки · фасады и внутреннее наполнение</figcaption></figure>
+        </div></details>
+      </section>
+
+      <section class="house-stage" id="house-wardrobe" aria-labelledby="wardrobe-heading">
+        <div class="house-section-heading"><div><span class="eyebrow">04 · ГАРДЕРОБНАЯ</span><h3 id="wardrobe-heading">Всё на своих местах.</h3></div></div>
+        <div class="gallery-grid wardrobe-gallery">
+          <figure class="gallery-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гардеробная · зеркало и открытое хранение" aria-label="Увеличить гардеробную с зеркалом"><img src="./assets/wardrobe.webp" alt="Гардеробная с зеркалом, открытой штангой, полками, коробами и местом для пылесоса" width="1573" height="1000" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Зеркало и открытое хранение</figcaption></figure>
+          <figure class="gallery-card wardrobe-tall"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гардеробная · обувница и место для робота" aria-label="Увеличить обувницу и место для робота"><img src="./assets/wardrobe-robot.webp" alt="Высокий стеллаж с полками для коробов, обувница и свободная ниша с роботом-пылесосом" width="1100" height="1430" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Обувница и место для робота-пылесоса</figcaption></figure>
+          <figure class="gallery-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Гардеробная · ящики и штанга" aria-label="Увеличить гардеробную с ящиками"><img src="./assets/wardrobe-storage.webp" alt="Гардеробная: открытая штанга, выдвижные ящики и верхняя полка для детских кресел" width="1575" height="999" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Штанга, ящики и верхняя полка</figcaption></figure>
+        </div>
+      </section>
+
+      <section class="house-stage" id="house-bath" aria-labelledby="bath-heading">
+        <div class="house-section-heading"><div><span class="eyebrow">05 · САНУЗЛЫ</span><h3 id="bath-heading">Продуманное хранение.</h3></div></div>
+        <div class="gallery-grid">
+          <figure class="gallery-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Родительский санузел · встроенный шкаф" aria-label="Увеличить чертёж шкафа в родительском санузле"><img src="./assets/bath-parents.webp" alt="Перспектива и размерный чертёж шкафа над инсталляцией в родительском санузле с вентиляцией, нишами и полками" width="712" height="760" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Родительский санузел · шкаф и полки</figcaption></figure>
+          <figure class="gallery-card"><button type="button" class="gallery-preview" data-action="view-image" data-caption="Детский санузел · встроенный шкаф" aria-label="Увеличить чертёж шкафа в детском санузле"><img src="./assets/bath-children.webp" alt="Перспектива и размерный чертёж шкафа в детском санузле со съёмной полкой и доступом к вентиляционному оборудованию" width="750" height="760" loading="lazy"><span class="view-hint" aria-hidden="true">↗</span></button><figcaption>Детский санузел · шкаф над инсталляцией</figcaption></figure>
+        </div>
+      </section>
+      <div class="house-location"><img src="./assets/courtyard.svg" width="600" height="400" alt="Упрощённые очертания нашего дома и двора"><div><span class="eyebrow">СКОРО БУДЕМ ДОМА</span><h3>Наш дом и двор</h3><a class="text-button" href="https://yandex.ru/maps/-/CXRdrJ3V" target="_blank" rel="noopener noreferrer">Посмотреть на карте <span aria-hidden="true">↗</span></a></div></div>
+    </div>
+  </dialog>
+
+  <dialog id="image-dialog" class="image-dialog" aria-labelledby="image-title">
+    <div class="image-toolbar"><h2 id="image-title"></h2><div class="image-zoom" role="group" aria-label="Масштаб изображения"><button type="button" data-action="image-zoom" data-zoom="1" aria-pressed="true">Вписать</button><button type="button" data-action="image-zoom" data-zoom="1.5" aria-pressed="false">150%</button><button type="button" data-action="image-zoom" data-zoom="2" aria-pressed="false">200%</button></div><button type="button" class="icon-button" data-action="close" aria-label="Закрыть изображение"><span class="close-icon"></span></button></div>
+    <div id="image-frame" class="image-frame" tabindex="0" role="region" aria-label="Изображение с увеличением и прокруткой"><img id="image-preview" alt=""></div>
+  </dialog>
+
+  <dialog id="editor-dialog" class="modal editor-dialog" aria-labelledby="editor-title"><div class="dialog-top"><div><span class="eyebrow">ДЛЯ ХОЗЯЕВ</span><h2 id="editor-title">Новая вещь</h2></div><button type="button" class="icon-button" data-action="close" aria-label="Закрыть редактор"><span class="close-icon"></span></button></div><form id="item-form"><input type="hidden" name="id"><input type="hidden" name="sort_order"><label>Название<input name="title" required maxlength="180" placeholder="Например, настольная лампа"></label><div class="form-row"><label>Комната<select name="category" required id="editor-category"></select></label><label class="quantity-label">Количество, шт.<input name="quantity" type="number" min="1" max="100" step="1" value="1" required></label></div><label>Ссылка на товар<div class="input-with-button"><input name="product_url" type="url" placeholder="https://market.yandex.ru/…" maxlength="4096"><button type="button" class="button button-small button-outline" id="import-button" data-action="metadata">Загрузить данные</button></div></label><p id="metadata-note" class="field-help">Если магазин отдаёт данные, заполним название, фото и цену. Любое поле можно изменить вручную.</p><div class="form-row"><label>Цена, ₽<input name="unit_price" type="number" min="0" max="100000000" step="0.01" placeholder="Пока неизвестна"></label><label>К чему относится цена<select name="price_mode"><option value="unit">За одну штуку</option><option value="total">За весь комплект</option></select></label></div><div id="editor-total" class="field-help"></div><label>Ссылка на фотографию<input name="image_url" type="url" placeholder="https://…/photo.jpg" maxlength="4096"></label><label>Примечание<textarea name="note" maxlength="2000" rows="3" placeholder="Размер, цвет или важная деталь"></textarea></label><p id="editor-reserved-note" class="quiet-note" hidden>Позиция уже забронирована. Новая цена изменит сумму в списке дарителя.</p><p id="editor-error" class="form-error" role="alert" hidden></p><div id="delete-confirm" class="delete-confirm" hidden><p>Удалить позицию вместе с её бронью? Вернуть её можно будет только добавлением заново.</p><button type="button" class="button button-danger button-small" data-action="confirm-delete">Да, удалить</button><button type="button" class="text-button" data-action="cancel-delete">Оставить</button></div><div class="form-actions"><button type="button" id="delete-button" class="text-button danger-text" data-action="delete">Удалить позицию</button><button type="submit" class="button button-primary" id="save-button">Сохранить</button></div></form></dialog>
+
+  <div id="toasts" class="toasts" role="status" aria-live="polite" aria-atomic="true"></div>
+  <noscript><div class="noscript">Для вишлиста нужен JavaScript. Включите его в настройках браузера.</div></noscript>
+  <script src="./config.js"></script>
+  <script src="./data/items.js"></script>
+  <script src="./assets/supabase.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

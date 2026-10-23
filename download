@@ -1,0 +1,75 @@
+export const allowedStores = new Set(['market.yandex.ru', 'yandex.ru', 'www.ozon.ru', 'ozon.ru', 'www.wildberries.ru', 'wildberries.ru']);
+
+export function storeURL(value) {
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.username || url.password || url.port && url.port !== '443' || !allowedStores.has(url.hostname)) {
+    throw new Error('Автозагрузка поддерживает ссылки Яндекс Маркета, Ozon и Wildberries по HTTPS. Для другого магазина добавьте фото и цену вручную.');
+  }
+  return url;
+}
+
+function decode(value) {
+  return String(value || '').replace(/&(?:amp|quot|apos|lt|gt|nbsp|#\d+|#x[\da-f]+);/gi, entity => {
+    const named = { '&amp;':'&', '&quot;':'"', '&apos;':"'", '&lt;':'<', '&gt;':'>', '&nbsp;':' ' };
+    if (named[entity.toLowerCase()]) return named[entity.toLowerCase()];
+    const hex = /^&#x/i.test(entity), code = Number.parseInt(entity.slice(hex ? 3 : 2,-1),hex ? 16 : 10);
+    return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : '';
+  });
+}
+
+function price(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const text = String(value).replace(/[\s\u00a0]/g,'').replace(',','.');
+  if (!/^\d+(?:\.\d{1,2})?$/.test(text)) return null;
+  const number = Number(text);
+  return Number.isFinite(number) && number <= 100000000 ? number : null;
+}
+
+function imageURL(value, pageURL) {
+  let candidate = Array.isArray(value) ? value[0] : value;
+  if (candidate && typeof candidate === 'object') candidate = candidate.url || candidate.contentUrl;
+  if (typeof candidate !== 'string') return '';
+  try {
+    const url = new URL(decode(candidate),pageURL);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
+  } catch { return ''; }
+}
+
+function productsIn(value) {
+  if (Array.isArray(value)) return value.flatMap(productsIn);
+  if (!value || typeof value !== 'object') return [];
+  const type = value['@type'];
+  if (type === 'Product' || Array.isArray(type) && type.includes('Product')) return [value];
+  if (value.mainEntity) return productsIn(value.mainEntity);
+  if (value['@graph']) return productsIn(value['@graph']);
+  return [];
+}
+
+export function parseProduct(html, pageURL) {
+  if (/showcaptcha|captcha\.yandex/i.test(pageURL) || /<title[^>]*>\s*(?:Вы не робот|Access Denied|Just a moment|Robot Check|Доступ ограничен)/i.test(html)) {
+    throw new Error('Магазин просит пройти проверку. Автозагрузка недоступна; заполните карточку вручную.');
+  }
+  const meta = new Map();
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([:\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)].map(m=>[m[1].toLowerCase(),decode(m[2] ?? m[3] ?? m[4])]));
+    const name = (attrs.property || attrs.name || attrs.itemprop || '').toLowerCase();
+    if (name && !meta.has(name) && attrs.content) meta.set(name,attrs.content);
+  }
+  let products=[];
+  for (const match of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { products.push(...productsIn(JSON.parse(match[1]))); } catch { /* Повреждённый JSON-LD не заменяет ручную карточку. */ }
+  }
+  const product = products.length === 1 ? products[0] : null;
+  const offer = product && (Array.isArray(product.offers) ? product.offers.length === 1 ? product.offers[0] : null : product.offers);
+  // Диапазон цен и несколько вариантов нельзя выдавать за цену выбранного товара.
+  const exactOffer = offer && offer['@type'] !== 'AggregateOffer' && offer.lowPrice == null && offer.highPrice == null ? offer : null;
+  let currency = String(exactOffer?.priceCurrency || meta.get('product:price:currency') || meta.get('og:price:currency') || meta.get('pricecurrency') || '').toUpperCase();
+  if (currency === 'RUR') currency = 'RUB';
+  const ambiguousOffers = products.length > 1 || product?.offers && !exactOffer;
+  const rawPrice = ambiguousOffers ? null : exactOffer?.price ?? meta.get('product:price:amount') ?? meta.get('og:price:amount') ?? meta.get('price');
+  const unit_price = currency === 'RUB' ? price(rawPrice) : null;
+  const title = decode(meta.get('og:title') || product?.name || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '').replace(/<[^>]+>/g,'').trim().slice(0,180);
+  const image_url = imageURL(meta.get('og:image') || product?.image,pageURL);
+  return { title, image_url, unit_price, currency: currency || null,
+    note: unit_price === null ? 'Фото и название загружены, если магазин их предоставил. Точную цену в рублях добавьте вручную.' : 'Проверьте цену выбранного варианта и укажите, относится ли она к одной штуке или целому комплекту.' };
+}

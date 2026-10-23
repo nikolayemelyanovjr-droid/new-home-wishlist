@@ -1,0 +1,1 @@
+{"name":"obzhivaemsya-wishlist","version":"1.0.0","private":true,"type":"module","scripts":{"test":"node --test tests/core.test.mjs tests/database.test.mjs tests/metadata.test.mjs"},"devDependencies":{"@electric-sql/pglite":"0.5.11"}}

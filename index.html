@@ -1,0 +1,71 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+
+test('PostgreSQL: роли, личная бронь, конфликты и права хозяина', async t => {
+  const db = new PGlite();
+  const seed = JSON.parse(await readFile(new URL('../data/items.json',import.meta.url),'utf8'));
+  const a='11111111-1111-4111-8111-111111111111', b='22222222-2222-4222-8222-222222222222', owner='33333333-3333-4333-8333-333333333333';
+  try {
+    await db.exec(`create role anon; create role authenticated; create schema auth;
+      create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
+      create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;`);
+    await db.exec(await readFile(new URL('../supabase/01-schema.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../supabase/02-seed.sql',import.meta.url),'utf8'));
+    await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now()),($3,$4,now()),($5,$6,now())',[a,'a@example.test',b,'b@example.test',owner,'owner@example.test']);
+    await db.query('insert into private.wishlist_admins values($1)',[owner]);
+    const as = async(user,fn)=>{
+      await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify(user?{sub:user,email:`${user}@example.test`,user_metadata:{is_admin:true}}:{})]);
+      await db.exec(`set role ${user?'authenticated':'anon'};`);
+      try { return await fn(); } finally { await db.exec('reset role'); }
+    };
+    const rpc = async(name,args=[],types=[])=>db.query(`select public.${name}(${args.map((_,i)=>`$${i+1}${types[i]?'::'+types[i]:''}`).join(',')}) as result`,args);
+    const first=seed.items[0].id, second=seed.items[1].id;
+
+    await t.test('Публичное чтение без email и чужих идентификаторов',async()=>{
+      const rows=(await as(null,()=>db.query('select * from public.get_wishlist()'))).rows;
+      assert.equal(rows.length,90);assert.equal(rows[0].is_mine,false);
+      assert.ok(!Object.keys(rows[0]).some(key=>/email|user_id|reserved_by/.test(key)));
+      await as(null,()=>assert.rejects(db.query('select * from private.wishlist_reservations'),/permission denied/));
+      await as(null,()=>assert.rejects(rpc('reserve_wishlist_item',[first]),/permission denied/));
+    });
+    await t.test('Посетитель не может менять карточку или выдавать себе права',async()=>{
+      assert.equal((await as(a,()=>rpc('is_wishlist_admin'))).rows[0].result,false);
+      await as(a,()=>assert.rejects(db.query("update public.wishlist_items set title='hacked' where id=$1",[first]),/permission denied/));
+      await as(a,()=>assert.rejects(rpc('save_wishlist_item',[JSON.stringify({...seed.items[0],title:'hacked'}),null],['jsonb','timestamptz']),/ADMIN_REQUIRED/));
+      await as(a,()=>assert.rejects(db.query('insert into private.wishlist_admins values($1)',[a]),/permission denied/));
+    });
+    await t.test('Подарок занимает один пользователь; повтор своего запроса идемпотентен',async()=>{
+      assert.equal((await as(a,()=>rpc('reserve_wishlist_item',[first]))).rows[0].result,true);
+      assert.equal((await as(a,()=>rpc('reserve_wishlist_item',[first]))).rows[0].result,true);
+      assert.equal((await as(b,()=>rpc('reserve_wishlist_item',[first]))).rows[0].result,false);
+      assert.equal((await db.query('select count(*)::integer n from private.wishlist_reservations where item_id=$1',[first])).rows[0].n,1);
+      assert.equal((await as(a,()=>rpc('reserve_wishlist_item',[second]))).rows[0].result,true);
+      const mine=(await as(a,()=>db.query('select * from public.get_wishlist() where is_mine'))).rows;
+      assert.equal(mine.length,2);
+      const other=(await as(b,()=>db.query('select * from public.get_wishlist() where id=$1',[first]))).rows[0];
+      assert.equal(other.is_reserved,true);assert.equal(other.is_mine,false);
+    });
+    await t.test('Чужую бронь снять нельзя, после отмены вещь снова свободна',async()=>{
+      assert.equal((await as(b,()=>rpc('release_wishlist_item',[first]))).rows[0].result,false);
+      assert.equal((await as(a,()=>rpc('release_wishlist_item',[first]))).rows[0].result,true);
+      assert.equal((await as(b,()=>rpc('reserve_wishlist_item',[first]))).rows[0].result,true);
+    });
+    await t.test('У владельца есть редактирование, у устаревшей формы есть защита от перезаписи',async()=>{
+      const current=(await db.query('select *,updated_at::text as updated_at from public.wishlist_items where id=$1',[first])).rows[0];
+      const item={...seed.items[0],title:'Банкетка новая',unit_price:5000,is_reserved:false};
+      const saved=(await as(owner,()=>rpc('save_wishlist_item',[JSON.stringify(item),current.updated_at],['jsonb','timestamptz']))).rows[0].result;
+      assert.equal(saved,first);
+      assert.equal((await db.query('select is_reserved from public.wishlist_items where id=$1',[first])).rows[0].is_reserved,true);
+      await as(owner,()=>assert.rejects(rpc('save_wishlist_item',[JSON.stringify(item),current.updated_at],['jsonb','timestamptz']),/EDIT_CONFLICT/));
+    });
+    await t.test('Повторный seed не стирает изменения; удаление убирает бронь',async()=>{
+      await db.exec(await readFile(new URL('../supabase/02-seed.sql',import.meta.url),'utf8'));
+      const current=(await db.query('select title,updated_at::text as updated_at from public.wishlist_items where id=$1',[first])).rows[0];
+      assert.equal(current.title,'Банкетка новая');
+      await as(owner,()=>rpc('delete_wishlist_item',[first,current.updated_at],['uuid','timestamptz']));
+      assert.equal((await db.query('select count(*)::integer n from private.wishlist_reservations where item_id=$1',[first])).rows[0].n,0);
+    });
+  } finally { await db.close(); }
+});

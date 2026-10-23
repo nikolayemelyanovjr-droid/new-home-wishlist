@@ -1,0 +1,9 @@
+// Здесь только публичные параметры. Секретный / service_role ключ сюда не вставлять.
+window.WISHLIST_CONFIG = Object.freeze({
+  supabaseUrl: "",
+  supabasePublishableKey: "",
+  // Необязательно: адрес развёрнутой функции product-metadata.
+  metadataEndpoint: "",
+  title: "Обживаемся.",
+  // Пустые параметры включают явно обозначенное локальное демо.
+});
